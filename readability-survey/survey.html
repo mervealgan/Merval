@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Enquête lisibilité</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+            font-size: 18px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 10px;
+        }
+
+        #pollForm div {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #pollForm div p {
+            font-size: 22px;
+        }
+
+        p {
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding: 10px;
+        }
+
+        .accessibility-tips {
+            background-color: #e9ecef;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+        .accessibility-tips i {
+            color: #007bff;
+            margin-right: 25px;
+        }
+
+        .accessibility-tips ul {
+            list-style-type: none;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .ratingValue {
+            font-size: 16px;
+            font-weight: bold;
+            color: #3498db;
+            margin-left: 10px;
+        }
+
+        button[type="submit"] {
+            display: block;
+            width: 100%;
+            margin: 30px auto 30px;
+            padding: 25px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #27ae60;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            #pollForm div {
+                padding: 15px;
+            }
+
+            button[type="submit"] {
+                width: 100%;
+            }
+
+            p {
+                font-size: 16px;
+            }
+
+            .ratingValue {
+                font-size: 35px;
+                margin-top: 5px;
+                margin-left: 0;
+            }
+
+            input[type="range"] {
+                margin-bottom: 20px;
+            }
+
+            .accessibility-tips i {
+                margin-right: 50px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Enquête sur la lisibilité des phrases</h1>
+    <p>Nous vous remercions d'avoir accepté de participer à notre enquête sur la lisibilité des phrases. Cette enquête s'adresse aux personnes de langue maternelle française ou ayant un niveau de français C1 ou plus.</p>
+    <p>Il vous sera présenté 20 paires de phrases : une version originale et une version simplifiée. Veuillez évaluer la lisibilité de chaque phrase individuellement. Vous pouvez soumettre vos réponses à tout moment avant d'avoir répondu à toutes les questions.</p>
+    <p>En soumettant vos réponses, vous acceptez de participer à cette étude. Aucune information personnelle ne sera collectée.</p>
+    <p>Merci pour votre participation !</p>
+
+    <div class="accessibility-tips">
+        <p><i class="fas fa-keyboard"></i> Conseils pour l'accessibilité :</p>
+        <ul>
+            <li><i class="fas fa-arrow-up"></i><i class="fas fa-arrow-down"></i> Utilisez <strong>Tab</strong> pour naviguer entre les phrases.</li>
+            <li><i class="fas fa-arrow-left"></i><i class="fas fa-arrow-right"></i> Utilisez les touches <strong>Flèche gauche</strong> et <strong>Flèche droite</strong> pour ajuster la note.</li>
+        </ul>
+    </div>
+
+    <form id="pollForm">
+        {% for id, sentence, simplified in sentences %}
+        <div>
+            <p><b>Q{{ loop.index }} :</b></p>
+            <p>{{ sentence }}</p>
+            <input type="range" min="0" max="7" value="0" class="rating" data-id="{{ id }}" data-type="original">
+            <p class="ratingValue">Sans réponse</p>
+            <p>{{ simplified }}</p>
+            <input type="range" min="0" max="7" value="0" class="rating" data-id="{{ id }}" data-type="simplified">
+            <p class="ratingValue">Sans réponse</p>
+        </div>
+        {% endfor %}
+        <button type="submit">Envoyer</button>
+    </form>
+
+    <script>
+
+        const labels = [
+            "Sans réponse",
+            "Très facile à lire",
+            "Facile à lire",
+            "Assez facile à lire",
+            "Neutre",
+            "Assez difficile à lire",
+            "Difficile à lire",
+            "Très difficile à lire"
+        ];
+
+        document.querySelectorAll('.rating').forEach(input => {
+            input.addEventListener('input', function() {
+                this.nextElementSibling.textContent = labels[this.value];
+            });
+        });
+
+        document.getElementById('pollForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            let ratings = {};
+
+        document.querySelectorAll('.rating').forEach(input => {
+            let id = input.dataset.id;
+            let type = input.dataset.type;
+
+            if (!ratings[id]) {
+                ratings[id] = {};
+            }
+
+            ratings[id][type] = input.value;
+        });
+
+            fetch('/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(ratings),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Thank you for your ratings!');
+                    window.location.reload();
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
+        });
+    </script>
+</body>
+</html>
