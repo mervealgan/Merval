@@ -1,0 +1,2 @@
+ensemble_size;model_name;mean_absolute_error_mean;mean_absolute_error_std;mean_squared_error_mean;mean_squared_error_std;root_mean_squared_error_mean;root_mean_squared_error_std
+35;camembert-base;0.14749563675746322;0.02836090727571211;0.03333417339601396;0.0126052031923806;0.1797144570138618;0.03221684747904844
